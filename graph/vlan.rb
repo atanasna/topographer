@@ -2,7 +2,7 @@ require "ipaddress"
 load "graph/vertex.rb"
 
 class Vlan < Vertex
-    attr_reader :id, :net, :desc, :type
+    attr_reader :net, :desc, :type
 
     def initialize id, ip, vid=nil, type=nil, desc=String.new
         super(id.to_s, vid)
@@ -25,8 +25,17 @@ class Vlan < Vertex
         end
     end
 
+    def id id
+        @id = id
+        @name = id.to_s
+    end
+
+    def id
+        return @id
+    end
+
     #JSON
-    def to_json
+    def to_json(options = {})
         js = JSON.parse super
         js['type'] = @type
         js['id'] = @id

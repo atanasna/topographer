@@ -5,7 +5,7 @@ class Vertex
     attr_accessor :name, :graph
     attr_reader :vid
 
-    def initialize name, vid=nil
+    def initialize name=nil, vid=nil
         @name = name
         @graph = nil
         if vid.nil? or vid.empty?
@@ -28,7 +28,7 @@ class Vertex
     end
 
     #JSON
-    def to_json
+    def to_json(options = {})
         {'class' => self.class.name, 'vid' => @vid, 'name' => @name}.to_json
     end
 

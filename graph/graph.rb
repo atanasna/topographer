@@ -3,10 +3,11 @@ load "graph/vrf.rb"
 load "graph/vs.rb"
 require 'rgl/adjacency'
 require "rgl/dijkstra"
+require "json"
 load "graph/global-vars.rb"
 
 class Graph < RGL::AdjacencyGraph
-      #attr_accessor :weights
+      attr_reader :weights
 
       def initialize
             super
@@ -59,6 +60,47 @@ class Graph < RGL::AdjacencyGraph
                   end
             end
       
+      #JSON
+            def to_json
+                data = Hash.new
+                data["vertices"] = self.vertices
+                data["edges"] = Array.new
+                @weights.each do |key,val|
+                    edge = Hash.new
+                    edge["source"] = key[0].vid
+                    edge["target"] = key[1].vid
+                    edge["weight"] = val
+                    data["edges"].push edge
+                end
+                data.to_json
+            end
+
+            def self.from_json string
+                graph = self.new 
+
+                data = JSON.parse string
+                data["vertices"].each do |vertex|
+                    if vertex["class"]=="Vrf"
+                        graph.add_vertex Vrf.new vertex["name"],vertex["vid"]
+                    end
+                    if vertex["class"]=="Vs"
+                        graph.add_vertex Vs.new vertex["name"],vertex["vid"]
+                    end
+                    if vertex["class"]=="Vlan"
+                        graph.add_vertex Vlan.new vertex["id"],vertex["ip"],vertex["vid"],vertex["type"],vertex["desc"]
+                    end
+                end
+                data["edges"].each do |edge|
+                    puts edge["source"].class.name
+                    puts edge["target"]
+                    puts edge["wight"]
+                    v1 = graph.find(edge["source"])
+                    v2 = graph.find(edge["target"])
+                    graph.connect v1,v2, edge["weight"]
+                end
+                return graph
+            end
+
       # HELPERS
             def connect v1,v2,weight=1
                   if not (v1.nil? and v2.nil?)
@@ -75,39 +117,31 @@ class Graph < RGL::AdjacencyGraph
                   end
             end
 
-            def shortest_path node1,node2
-                  return self.dijkstra_shortest_path(@weights, node1, node2)
+            def shortest_path source,target
+                  return self.dijkstra_shortest_path(@weights, source, target)
             end
 
 
       # SEARCHES
             def vlans
-                  return self.vertices.find_all{|node| node.class.name=="Vlan"}
+                return self.vertices.find_all{|vertex| vertex.class.name=="Vlan"}
             end
 
             def vrfs
-                  return self.vertices.find_all{|node| node.class.name=="Vrf"}
+                return self.vertices.find_all{|vertex| vertex.class.name=="Vrf"}
             end
 
             def vses
-                  return self.vertices.find_all{|node| node.class.name=="Vs"}
+                return self.vertices.find_all{|vertex| vertex.class.name=="Vs"}
             end
 
-            def find name
-                  return self.vertices.find{|node| node.name == name}
+            def find string
+                vertex =  self.vertices.find{|vertex| vertex.name == string}
+                if vertex.nil?
+                    vertex =  self.vertices.find{|vertex| vertex.vid == string} 
+                end
+                return vertex
             end
-            
-            #def find_vlan_by_id id
-            #      return self.vlans.find{|vlan| vlan.id==id}
-            #end
-#
-            #def find_vs_by_name name
-            #      return self.vses.find{|vs| vs.name==name}
-            #end
-
-            #def find_vrf_by_name name
-            #      return self.vrfs.find{|vrf| vrf.name==name}
-            #end
             
             def get_vrfs_behind_vs vs
                   vrfs = Array.new
@@ -150,4 +184,5 @@ class Graph < RGL::AdjacencyGraph
                   return vlans
             end
 
+            
 end

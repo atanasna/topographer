@@ -1,20 +1,20 @@
 load "graph/vlan.rb"
-load "graph/graph.rb"
 load "graph/vrf.rb"
-load "graph/vertex.rb"
+load "graph/vs.rb"
+require "ipaddress"
+load "graph/graph.rb"
+require "rgl/adjacency"
+require "rgl/dot"
+load "poller.rb"
 
-v1 = Vertex.new "nama1"
-v2 = Vertex.new "nama2"
-v3 = Vertex.new "nama3"
+graph = Graph.new
 
-g = Graph.new
+puts graph.methods
+graph.load_from_db
+new_graph = Graph.from_json graph.to_json
 
-g.add_vertex v1
-g.add_vertex v2
-g.add_vertex v3
 
-g.connect v1,v2
-g.connect v2,v3
-
-puts g.methods
-
+puts graph.vertices.count
+puts new_graph.vertices.count
+puts graph.edges.count
+puts new_graph.edges.count

@@ -116,7 +116,7 @@ end
 
 
 
-graph = Graph.new
+new_graph = Graph.new
 
 puts "Do you want to update the DB [y/n]"
 resp = gets.chomp
@@ -125,9 +125,11 @@ if resp == "y"
     passcode = gets.chomp
     poll_all "nikata", passcode, "vsx_util_interfaces"
 end
-graph.load_from_db
-#graph.write_to_graphic_file 'jpg'
+new_graph.load_from_db
+new_graph.load_from_db
+graph = Graph.from_json new_graph.to_json
 
+#graph.write_to_graphic_file 'jpg'
 while true
     puts "Pick an option"
     puts "1. Show VRFs behind VS"
