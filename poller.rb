@@ -1,10 +1,9 @@
 require "net/ssh"
-require 'net/ssh/gateway'
 load "graph/vlan.rb"
 load "graph/vrf.rb"  
 load "graph/vs.rb"
 load "graph/graph.rb"
-load "global-vars.rb"
+load "graph/global-vars.rb"
 
 
 def poll_nexus_conf user, pass

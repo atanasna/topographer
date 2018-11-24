@@ -9,7 +9,7 @@ load "poller.rb"
 
 def print_vs_vrfs graph, vs_name
     puts "".ljust(70,"-")
-    vs = graph.find_vs_by_name vs_name
+    vs = graph.find vs_name
     vrfs = graph.get_vrfs_behind_vs vs
     vrfs.each do |vrf|
         puts "#{vrf.name}"
@@ -18,7 +18,7 @@ def print_vs_vrfs graph, vs_name
 end
 
 def print_vs_networks graph, vs_name
-    vs = graph.find_vs_by_name vs_name
+    vs = graph.find vs_name
     vlans = graph.get_vlans_behind_vs vs
     puts "".ljust(70,"-")
     vlans.each do |vlan|
@@ -35,7 +35,7 @@ def print_vs_all graph, vs_name
     " Type".ljust(10) + "|" +
     " Network".ljust(21) + "|"
     
-    vs = graph.find_vs_by_name vs_name
+    vs = graph.find vs_name
     vrfs = graph.get_vrfs_behind_vs vs
     vlans_all = graph.get_vlans_behind_vs vs
 
@@ -126,7 +126,7 @@ if resp == "y"
     poll_all "nikata", passcode, "vsx_util_interfaces"
 end
 graph.load_from_db
-graph.write_to_graphic_file 'jpg'
+#graph.write_to_graphic_file 'jpg'
 
 while true
     puts "Pick an option"

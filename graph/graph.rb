@@ -3,7 +3,7 @@ load "graph/vrf.rb"
 load "graph/vs.rb"
 require 'rgl/adjacency'
 require "rgl/dijkstra"
-load "global-vars.rb"
+load "graph/global-vars.rb"
 
 class Graph < RGL::AdjacencyGraph
       #attr_accessor :weights
@@ -15,16 +15,18 @@ class Graph < RGL::AdjacencyGraph
       
       # POPULATORS
             def add_vertex vertex
-                  if find(vertex.name).nil?
-                        super
-                  else
-                        #error
-                  end
+                vertex.graph = self
+                if find(vertex.name).nil?
+                    super
+                else
+                    #error
+                end
             end
 
             def load_from_db
                   nodes_lines = File.read($nodes_db).split(/\n+/)
                   edges_lines = File.read($edges_db).split(/\n+/)
+
                   nodes_lines.each do |line|
                         if line.match(/^vs/)
                               vs_name = line.match(/^vs : ([a-z,A-Z,_,\-,0-9]+)/i).captures.first
@@ -58,8 +60,6 @@ class Graph < RGL::AdjacencyGraph
             end
       
       # HELPERS
-            
-            
             def connect v1,v2,weight=1
                   if not (v1.nil? and v2.nil?)
                         @weights.merge!([v1, v2] => weight)
@@ -81,8 +81,6 @@ class Graph < RGL::AdjacencyGraph
 
 
       # SEARCHES
-            
-            
             def vlans
                   return self.vertices.find_all{|node| node.class.name=="Vlan"}
             end
@@ -99,17 +97,17 @@ class Graph < RGL::AdjacencyGraph
                   return self.vertices.find{|node| node.name == name}
             end
             
-            def find_vlan_by_id id
-                  return self.vlans.find{|vlan| vlan.id==id}
-            end
+            #def find_vlan_by_id id
+            #      return self.vlans.find{|vlan| vlan.id==id}
+            #end
+#
+            #def find_vs_by_name name
+            #      return self.vses.find{|vs| vs.name==name}
+            #end
 
-            def find_vs_by_name name
-                  return self.vses.find{|vs| vs.name==name}
-            end
-
-            def find_vrf_by_name name
-                  return self.vrfs.find{|vrf| vrf.name==name}
-            end
+            #def find_vrf_by_name name
+            #      return self.vrfs.find{|vrf| vrf.name==name}
+            #end
             
             def get_vrfs_behind_vs vs
                   vrfs = Array.new

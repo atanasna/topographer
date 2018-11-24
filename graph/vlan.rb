@@ -2,14 +2,13 @@ require "ipaddress"
 load "graph/vertex.rb"
 
 class Vlan < Vertex
-    attr_reader :id, :net, :description, :type
-    attr_accessor :vrf
+    attr_reader :id, :net, :desc, :type
 
-    def initialize id, ip, type=nil, description="null"
-        super(id.to_s)
+    def initialize id, ip, vid=nil, type=nil, desc=String.new
+        super(id.to_s, vid)
         @id = id
         @net = (IPAddress ip).network
-        @description = description
+        @desc = desc
         if @type == nil
             if @net.prefix < 28 then @type = "H" end
             if @net.prefix == 28 then @type = "HT?" end
@@ -24,5 +23,20 @@ class Vlan < Vertex
         else
             return false
         end
+    end
+
+    #JSON
+    def to_json
+        js = JSON.parse super
+        js['type'] = @type
+        js['id'] = @id
+        js['ip'] = @net.address.to_s + "/" + @net.prefix.to_s
+        js['desc'] = @desc
+        js.to_json
+    end
+
+    def self.from_json string
+        data = JSON.load string
+        self.new data['name'], data['ip'], data['vid'], data['type'], data['desc']
     end
 end
