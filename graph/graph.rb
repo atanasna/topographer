@@ -17,7 +17,7 @@ class Graph < RGL::AdjacencyGraph
       # POPULATORS
             def add_vertex vertex
                 vertex.graph = self
-                if find(vertex.name).nil?
+                if find(vertex.vid).nil? and find(vertex.name).nil?
                     super
                 else
                     #error
@@ -60,7 +60,7 @@ class Graph < RGL::AdjacencyGraph
                   end
             end
       
-      #JSON
+      #TRANSFORMERS
             def to_json
                 data = Hash.new
                 data["vertices"] = self.vertices
@@ -91,9 +91,6 @@ class Graph < RGL::AdjacencyGraph
                     end
                 end
                 data["edges"].each do |edge|
-                    puts edge["source"].class.name
-                    puts edge["target"]
-                    puts edge["wight"]
                     v1 = graph.find(edge["source"])
                     v2 = graph.find(edge["target"])
                     graph.connect v1,v2, edge["weight"]
@@ -101,12 +98,36 @@ class Graph < RGL::AdjacencyGraph
                 return graph
             end
 
+            def to_csv
+                edge_id = 0
+                vertices_db_lines = Array.new
+                edges_db_lines = Array.new
+                vertices_db_lines.push "Id,Label,Timeset,Class"
+                edges_db_lines.push "Source,Target,Type,Id,Label,timeset,Weight"
+
+                self.vertices.each do |vertex|
+                    vertices_db_lines.push "#{vertex.vid},#{vertex.name},,#{vertex.class.name}"
+                end
+
+                @weights.each do |key,val|
+                    edges_db_lines.push "#{key[0].vid},#{key[1].vid},Undirected,#{edge_id},,,#{val}"
+                    edge_id+=1
+                end
+
+                File.open("vertices.csv", "w+") do |f|
+                    vertices_db_lines.each { |element| f.puts(element) }
+                end
+                File.open("edges.csv", "w+") do |f|
+                    edges_db_lines.each { |element| f.puts(element) }
+                end
+            end
+
       # HELPERS
             def connect v1,v2,weight=1
-                  if not (v1.nil? and v2.nil?)
-                        @weights.merge!([v1, v2] => weight)
-                        self.add_edge v1,v2
-                  end
+                if not (v1.nil? and v2.nil?)
+                    @weights.merge!([v1, v2] => weight)
+                    self.add_edge v1,v2
+                end    
             end
 
             def connected? v1,v2
@@ -135,10 +156,10 @@ class Graph < RGL::AdjacencyGraph
                 return self.vertices.find_all{|vertex| vertex.class.name=="Vs"}
             end
 
-            def find string
-                vertex =  self.vertices.find{|vertex| vertex.name == string}
+            def find input
+                vertex =  self.vertices.find{|vertex| vertex.name == input.to_s}
                 if vertex.nil?
-                    vertex =  self.vertices.find{|vertex| vertex.vid == string} 
+                    vertex =  self.vertices.find{|vertex| vertex.vid == input.to_s} 
                 end
                 return vertex
             end
@@ -160,17 +181,18 @@ class Graph < RGL::AdjacencyGraph
             end
             
             def get_vlans_behind_vs vs
-                  vlans = Array.new
-                  nodes = self.adjacent_vertices vs
-                  nodes.each do |node|
-                        if node.class.name == "Vlan"
-                              vlans.push node
-                        end
-                        if node.class.name == "Vrf"
-                              vlans += self.get_vlans_behind_vrf node
-                        end
-                  end
-                  return vlans
+
+                vlans = Array.new
+                nodes = self.adjacent_vertices vs
+                nodes.each do |node|
+                    if node.class.name == "Vlan"
+                          vlans.push node
+                    end
+                    if node.class.name == "Vrf"
+                          vlans += self.get_vlans_behind_vrf node
+                    end
+                end
+                return vlans
             end
 
             def get_vlans_behind_vrf vrf
