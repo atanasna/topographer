@@ -17,15 +17,19 @@ class Vlan < Vertex
     end
 
     def include? ip
-        ip = IPAddress ip
-        if @net.include? ip
-            return true
-        else
-            return false
+        begin
+            ip = IPAddress ip
+            if @net.include? ip
+                return true
+            else
+                return false
+            end
+        rescue
+            return nil
         end
     end
 
-    def id id
+    def id=id
         @id = id
         @name = id.to_s
     end

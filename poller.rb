@@ -43,18 +43,18 @@ def poll_nexus_conf user, pass, graph
 
             if vlan_id != 0 and vlan_ip_string != "255.255.255.255/32"
                 #nodes_db_lines.push "vlan : #{vlan_id} : #{vlan_ip_string}"
-                vlan = Vlan.new vlan_id.to_i, vlan_ip_string
-                graph.add_vertex vlan
+                graph.add_vertex Vlan.new vlan_id.to_i, vlan_ip_string
             end
 
             if vrf_name != "none"
                 #nodes_db_lines.push "vrf : #{vrf_name}"
-                vrf = Vrf.new vrf_name
-                graph.add_vertex vrf
+                graph.add_vertex Vrf.new vrf_name
             end
 
             if vrf_name != "none" and vlan_id != 0 and vlan_ip_string != "255.255.255.255/32"
                 #edges_db_lines.push "#{vrf_name} : #{vlan_id}"
+                vrf = graph.find vlan_id.to_s
+                vlan = graph.find vrf_name
                 graph.connect vrf,vlan
             end
         end
@@ -73,7 +73,7 @@ def poll_cp_conf filename, graph
     nodes_db_lines = Array.new
     edges_db_lines = Array.new
 
-    bond_lines = objects_file_lines.find_all{|l| l[/bond/]}
+    bond_lines = objects_file_lines.find_all{|l| l[/V bond/]}
     bond_lines.each do |line|
         vlan_id = 0
         vlan_ip_string = "255.255.255.255/32"
@@ -108,16 +108,16 @@ def poll_cp_conf filename, graph
     return graph
 end
 
-def poll_all cisco_user, cisco_pass, cp_filename
+def poll_all cisco_user, cisco_pass
 
     graph = Graph.new
 
     nodes_db_lines = Array.new
     edges_db_lines = Array.new
 
-    #graph = poll_nexus_conf cisco_user, cisco_pass, graph
-    graph = poll_cp_conf cp_filename, graph
-
+    graph = poll_nexus_conf cisco_user, cisco_pass, graph
+    graph = poll_cp_conf "vsx_util_interfaces_prod", graph
+    graph = poll_cp_conf "vsx_util_interfaces_nonprod", graph
     #nodes_db_lines = out_nex[0] + out_cp[0]
     #edges_db_lines = out_nex[1] + out_cp[1]
 

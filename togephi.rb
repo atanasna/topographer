@@ -8,8 +8,6 @@ require "rgl/dot"
 load "poller.rb"
 
 
- 
-#poll_all "nikata","86136123"
 lines = File.read("json_graph").split(/\n+/)
 graph = Graph.from_json lines.first
 
@@ -43,10 +41,11 @@ graph.connect r2,vs9
 graph.connect r2,vs10
 graph.connect r2,vs11
 
-neo4j = graph.to_neo4j
+vertices_db_lines, edges_db_lines = graph.to_csv
 
-File.open("neo4j.json", "w+") do |f|
-    f.puts(neo4j)
+File.open("vertices.csv", "w+") do |f|
+    vertices_db_lines.each { |element| f.puts(element) }
 end
-puts graph.vertices.count
-puts graph.edges.count
+File.open("edges.csv", "w+") do |f|
+    edges_db_lines.each { |element| f.puts(element) }
+end

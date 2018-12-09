@@ -80,25 +80,44 @@ def print_vs_all graph, vs_name
     #puts "-------------------------------------------"
 end
 
-
-def print_info_by_ip seed, input
-    vlans = seed.vlans.find_all{|vlan| vlan.include? input}
-    if vlans.empty?
-        puts "No VLANs contain this ip address"
-    else
-        vlans.each do |vlan|
-            puts "#{vlan.id} - #{vlan.net.address} / #{vlan.net.prefix} -> #{vlan.vrf.name} -> #{vlan.vrf.vs.name}"
+def tryme graph, input
+    vrf = graph.vrfs.find_all{|vrf| vrf.name == input}.first
+    if vrf.nil?
+        vs = graph.vses.find_all{|vs| vs.name == input}.first
+        if vs.nil?
+            vlan = graph.vlans.find_all{|vlan| vlan.name==input}.first
+            if vlan.nil?
+                vlan = graph.vlans.find_all{|vlan| vlan.include? input}.first
+                if vlan.nil?
+                    puts "nothing to do here :)"
+                else
+                    print_info_for_vlan graph, vlan
+                end
+            else
+                print_info_for_vlan graph, vlan
+            end
+        else
+            print_vs_all graph, vs.name
+            # show attached networks to the VRF
         end
+    else
+        puts vrf.name
     end
 end
 
-def print_info_by_vlan seed, input
-    vlan=nil
-    vlan = seed.vlans.find{|vlan| vlan.id == input.to_i}
+def print_info_for_vlan graph, vlan
+
     if vlan.nil?
         puts "No VLANs with this ID"
     else
-        puts "#{vlan.id} - #{vlan.net.address} / #{vlan.net.prefix} -> #{vlan.vrf.name} -> #{vlan.vrf.vs.name}"
+        puts "---------------------------------------------------"
+        puts "VLAN:    #{vlan.id}"
+        puts "Network: #{vlan.net.address} / #{vlan.net.prefix}"
+        puts "Path out:"
+        vs = graph.vses.find{|vs| vs.name == "PROD_PERIMETER_VS"}
+        graph.shortest_path(vlan, vs).each do |v|
+            print "#{v.name}(#{v.class}) -> "
+        end
     end
 end
 
@@ -113,10 +132,7 @@ def print_vs_list vses
     print "Pick a firewall: "
 end
 
-
-
-
-new_graph = Graph.new
+# START---------------------------------------------------------------
 
 puts "Do you want to update the DB [y/n]"
 resp = gets.chomp
@@ -125,80 +141,94 @@ if resp == "y"
     passcode = gets.chomp
     poll_all "nikata", passcode, "vsx_util_interfaces"
 end
-new_graph.load_from_db
-new_graph.load_from_db
-graph = Graph.from_json new_graph.to_json
 
-#graph.write_to_graphic_file 'jpg'
-while true
-    puts "Pick an option"
-    puts "1. Show VRFs behind VS"
-    puts "2. Show VLANs behind VS"
-    puts "3. Show EVERYTHING per VS"
-    puts "4. Find by IP"
-    puts "5. Find by Vlan"
-    puts "q. Exit"
-    resp = gets.chomp
-    if resp=="1"
-        print_vs_list graph.vses
-        fw = gets.chomp
-        system("clear")
-        print_vs_vrfs graph, graph.vses[fw.to_i-1].name
-        puts "Press ENTER key to go back to Menu"
-        gets.chomp
-    end
-    if resp=="2"
-        print_vs_list graph.vses
-        fw = gets.chomp
-        system("clear")
-        print_vs_networks graph, graph.vses[fw.to_i-1].name
-        puts "Press ENTER key to go back to Menu"
-        gets.chomp
-    end
-    if resp=="3"
-        print_vs_list graph.vses
-        fw = gets.chomp
-        system("clear")
-        print_vs_all graph, graph.vses[fw.to_i-1].name
-        puts "Press ENTER to go back to Menu"
-        gets.chomp
-    end
-    if resp=="4"
-        puts "IP?: "
-        input = gets.chomp
-        #print_info_by_ip s, input
-        system("clear")
-        puts "Press ENTER to go back to Menu"
-        gets.chomp
-    end
-    if resp=="5"
-        puts "VLAN?: "
-        input = gets.chomp
-        #print_info_by_vlan s, input
-        system("clear")
-        puts "Press ENTER to go back to Menu"
-        gets.chomp
-    end
+lines = File.read("json_graph")
+graph = Graph.from_json lines
 
-    if resp=="6"
-        puts "name:"
-        input = gets.chomp
-        node = graph.vrfs.find{|vrf| vrf.name == input}
-        if node.nil?
-            node = graph.vses.find{|vs| vs.name == input}
+#Manual Vertecies
+    vs1 = graph.find "PROD_CORE_VS"
+    vs2 = graph.find "MGMT_VS"
+    vs3 = graph.find "PROD_GHO_VS"
+    vs4 = graph.find "PROD_DCSERVICES_VS"
+    vs5 = graph.find "PROD_PERIMETER_VS"
+    r = graph.find "PROD_CORE_VIRTUAL-ROU"
+
+
+    vs6 = graph.find "NONPROD_EBT_VS"
+    vs7 = graph.find "NONPROD_CORE_VS"
+    vs8 = graph.find "NONPROD_GHO_VS"
+    vs9 = graph.find "PP_DC_SERVICES_VS"
+    vs10 = graph.find "TS_DC_SERVICES_VS"
+    vs11 = graph.find "NONPROD_DCSERVICES_VS"
+    r2 = graph.find "NONPROD_CORE_VIRTUAL-"
+
+    graph.connect r,vs1
+    graph.connect r,vs2
+    graph.connect r,vs3
+    graph.connect r,vs4
+    graph.connect r,vs5
+
+    graph.connect r2,vs6
+    graph.connect r2,vs7
+    graph.connect r2,vs8
+    graph.connect r2,vs9
+    graph.connect r2,vs10
+    graph.connect r2,vs11
+
+#Menu 
+    #graph.write_to_graphic_file 'jpg'
+    while true
+        system('cls')
+        puts "Pick an option"
+        puts "1. Show VRFs behind VS"
+        puts "2. Show VLANs behind VS"
+        puts "3. Show EVERYTHING per VS"
+        puts "4. Try my superior intelligence"
+        puts "q. Exit"
+        resp = gets.chomp
+        #1. Show VRFs behind VS
+        if resp=="1"
+            print_vs_list graph.vses
+            fw = gets.chomp
+            system('cls')
+            print_vs_vrfs graph, graph.vses[fw.to_i-1].name
+            puts "Press ENTER key to go back to Menu"
+            gets.chomp
         end
-        if not node.nil?
-            pp graph.adjacent_vertices node
+        #2. Show VLANs behind VS
+        if resp=="2"
+            print_vs_list graph.vses
+            fw = gets.chomp
+            system('cls')
+            print_vs_networks graph, graph.vses[fw.to_i-1].name
+            puts "Press ENTER key to go back to Menu"
+            gets.chomp
         end
-
-
-
-        #print_info_by_vlan s, input
-        system("clear")
-        puts "Press ENTER to go back to Menu"
-        gets.chomp
+        #3. Show EVERYTHING per VS
+        if resp=="3"
+            print_vs_list graph.vses
+            fw = gets.chomp
+            system('cls')
+            print_vs_all graph, graph.vses[fw.to_i-1].name
+            puts "Press ENTER to go back to Menu"
+            gets.chomp
+        end
+        #4. Find by IP
+        if resp=="4"
+            #puts "IP?: "
+            #input = gets.chomp
+            ##print_info_by_ip s, input
+            #system("clear")
+            #puts "Press ENTER to go back to Menu"
+            #gets.chomp
+            print "give me something : "
+            input = gets.chomp
+            system('cls')
+            tryme graph, input
+            puts "Press ENTER to go back to Menu"
+            gets.chomp
+        end
+        if resp=="q"
+            break
+        end
     end
-    if resp=="q"
-        break
-    end
-end

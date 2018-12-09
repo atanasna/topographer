@@ -24,41 +24,41 @@ class Graph < RGL::AdjacencyGraph
                 end
             end
 
-            def load_from_db
-                  nodes_lines = File.read($nodes_db).split(/\n+/)
-                  edges_lines = File.read($edges_db).split(/\n+/)
-
-                  nodes_lines.each do |line|
-                        if line.match(/^vs/)
-                              vs_name = line.match(/^vs : ([a-z,A-Z,_,\-,0-9]+)/i).captures.first
-                              if find(vs_name).nil?
-                                    self.add_vertex Vs.new vs_name
-                              end
-                        end
-                        if line.match(/^vlan/)
-                              vlan_id, vlan_ip = line.match(/^vlan : (\d+) : (\d+\.\d+\.\d+\.\d+\/\d+)/i).captures
-                              if find(vlan_id.to_s).nil?
-                                    self.add_vertex Vlan.new vlan_id.to_i, vlan_ip
-                              end
-                        end
-                        if line.match(/^vrf/)
-                              vrf_name = line.match(/^vrf : ([a-z,A-Z,_,\-,0-9]+)/i).captures.first
-                              if find(vrf_name).nil?
-                                    self.add_vertex Vrf.new vrf_name
-                              end
-                        end
-                  end
-                  edges_lines.each do |line|
-                        v1_name, v2_name = line.match(/([a-z,A-Z,_,\-,0-9]+)\s:\s([a-z,A-Z,_,\-,0-9]+)/).captures
-                        v1 = self.find v1_name
-                        v2 = self.find v2_name
-                        if not (v1.nil? and v2.nil?)
-                              if not connected? v1,v2
-                                    connect v1,v2
-                              end
-                        end
-                  end
-            end
+            #def load_from_db
+            #      nodes_lines = File.read($nodes_db).split(/\n+/)
+            #      edges_lines = File.read($edges_db).split(/\n+/)
+            #
+            #      nodes_lines.each do |line|
+            #            if line.match(/^vs/)
+            #                  vs_name = line.match(/^vs : ([a-z,A-Z,_,\-,0-9]+)/i).captures.first
+            #                  if find(vs_name).nil?
+            #                        self.add_vertex Vs.new vs_name
+            #                  end
+            #            end
+            #            if line.match(/^vlan/)
+            #                  vlan_id, vlan_ip = line.match(/^vlan : (\d+) : (\d+\.\d+\.\d+\.\d+\/\d+)/i).captures
+            #                  if find(vlan_id.to_s).nil?
+            #                        self.add_vertex Vlan.new vlan_id.to_i, vlan_ip
+            #                  end
+            #            end
+            #            if line.match(/^vrf/)
+            #                  vrf_name = line.match(/^vrf : ([a-z,A-Z,_,\-,0-9]+)/i).captures.first
+            #                  if find(vrf_name).nil?
+            #                        self.add_vertex Vrf.new vrf_name
+            #                  end
+            #            end
+            #      end
+            #      edges_lines.each do |line|
+            #            v1_name, v2_name = line.match(/([a-z,A-Z,_,\-,0-9]+)\s:\s([a-z,A-Z,_,\-,0-9]+)/).captures
+            #            v1 = self.find v1_name
+            #            v2 = self.find v2_name
+            #            if not (v1.nil? and v2.nil?)
+            #                  if not connected? v1,v2
+            #                        connect v1,v2
+            #                  end
+            #            end
+            #      end
+            #end
       
       #TRANSFORMERS
             def to_json
@@ -72,13 +72,18 @@ class Graph < RGL::AdjacencyGraph
                     edge["weight"] = val
                     data["edges"].push edge
                 end
-                data.to_json
+                return data.to_json
+                #pretty export to json
+                #js = JSON.pretty_generate( JSON.parse(graph.to_json) ).split('\n')
+                #File.open("json_graph_pp", "w+") do |f|
+                #    js.each { |element| f.puts(element) }
+                #end
             end
 
-            def self.from_json string
+            def self.from_json input
                 graph = self.new 
 
-                data = JSON.parse string
+                data = JSON.parse input
                 data["vertices"].each do |vertex|
                     if vertex["class"]=="Vrf"
                         graph.add_vertex Vrf.new vertex["name"],vertex["vid"]
@@ -114,12 +119,13 @@ class Graph < RGL::AdjacencyGraph
                     edge_id+=1
                 end
 
-                File.open("vertices.csv", "w+") do |f|
-                    vertices_db_lines.each { |element| f.puts(element) }
-                end
-                File.open("edges.csv", "w+") do |f|
-                    edges_db_lines.each { |element| f.puts(element) }
-                end
+                return vertices_db_lines, edges_db_lines
+                #File.open("vertices.csv", "w+") do |f|
+                #    vertices_db_lines.each { |element| f.puts(element) }
+                #end
+                #File.open("edges.csv", "w+") do |f|
+                #    edges_db_lines.each { |element| f.puts(element) }
+                #end
             end
 
       # HELPERS
