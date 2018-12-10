@@ -142,8 +142,7 @@ if resp == "y"
     poll_all "nikata", passcode, "vsx_util_interfaces"
 end
 
-lines = File.read("json_graph")
-graph = Graph.from_json lines
+graph = Graph.from_json File.read("json_graph")
 
 #Manual Vertecies
     vs1 = graph.find "PROD_CORE_VS"
@@ -152,7 +151,6 @@ graph = Graph.from_json lines
     vs4 = graph.find "PROD_DCSERVICES_VS"
     vs5 = graph.find "PROD_PERIMETER_VS"
     r = graph.find "PROD_CORE_VIRTUAL-ROU"
-
 
     vs6 = graph.find "NONPROD_EBT_VS"
     vs7 = graph.find "NONPROD_CORE_VS"
@@ -176,7 +174,6 @@ graph = Graph.from_json lines
     graph.connect r2,vs11
 
 #Menu 
-    #graph.write_to_graphic_file 'jpg'
     while true
         system('cls')
         puts "Pick an option"
@@ -213,14 +210,8 @@ graph = Graph.from_json lines
             puts "Press ENTER to go back to Menu"
             gets.chomp
         end
-        #4. Find by IP
+        #4. Find by whatever is given
         if resp=="4"
-            #puts "IP?: "
-            #input = gets.chomp
-            ##print_info_by_ip s, input
-            #system("clear")
-            #puts "Press ENTER to go back to Menu"
-            #gets.chomp
             print "give me something : "
             input = gets.chomp
             system('cls')

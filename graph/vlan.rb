@@ -1,5 +1,5 @@
 require "ipaddress"
-load "graph/vertex.rb"
+require_relative "vertex.rb"
 
 class Vlan < Vertex
     attr_reader :net, :desc, :type

@@ -3,14 +3,13 @@ load "graph/vlan.rb"
 load "graph/vrf.rb"  
 load "graph/vs.rb"
 load "graph/graph.rb"
-load "graph/global-vars.rb"
 
-def poll_nexus_conf user, pass, graph
+def poll_nexus_conf user, pass, ip, graph
     nodes_db_lines = Array.new
     edges_db_lines = Array.new
     conf = String.new
 
-    Net::SSH.start('10.66.51.7', user, password: pass) do |session|
+    Net::SSH.start(ip, user, password: pass) do |session|
         conf = session.exec!("show run interface | inc \"interface |ip address|vrf\"")
         conf = conf.to_s.split("\n")
     end
@@ -115,7 +114,7 @@ def poll_all cisco_user, cisco_pass
     nodes_db_lines = Array.new
     edges_db_lines = Array.new
 
-    graph = poll_nexus_conf cisco_user, cisco_pass, graph
+    graph = poll_nexus_conf '10.66.51.7', cisco_user, cisco_pass, graph
     graph = poll_cp_conf "vsx_util_interfaces_prod", graph
     graph = poll_cp_conf "vsx_util_interfaces_nonprod", graph
     #nodes_db_lines = out_nex[0] + out_cp[0]

@@ -1,4 +1,4 @@
-load "graph/vertex.rb"
+require_relative "vertex.rb"
 
 class Vs < Vertex
 
