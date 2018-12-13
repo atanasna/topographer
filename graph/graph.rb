@@ -126,7 +126,7 @@ class Graph < RGL::AdjacencyGraph
         end
 
         def find input
-            vertex =  self.vertices.find{|vertex| vertex.name == input.to_s}
+            vertex = self.vertices.find{|vertex| vertex.name == input.to_s}
             if vertex.nil?
                 vertex =  self.vertices.find{|vertex| vertex.vid == input.to_s} 
             end
@@ -150,18 +150,21 @@ class Graph < RGL::AdjacencyGraph
         end
         
         def get_vlans_behind_vs vs
-
             vlans = Array.new
             nodes = self.adjacent_vertices vs
+            vrfs = get_vrfs_behind_vs vs
+
             nodes.each do |node|
                 if node.class.name == "Vlan"
                       vlans.push node
                 end
-                if node.class.name == "Vrf"
-                      vlans += self.get_vlans_behind_vrf node
-                end
             end
-            return vlans
+
+            vrfs.each do |vrf|
+                vlans += self.get_vlans_behind_vrf vrf
+            end
+            
+            return vlans.uniq
         end
 
         def get_vlans_behind_vrf vrf

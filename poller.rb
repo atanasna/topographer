@@ -1,8 +1,8 @@
 require "net/ssh"
-load "graph/vlan.rb"
-load "graph/vrf.rb"  
-load "graph/vs.rb"
-load "graph/graph.rb"
+require_relative "graph/vlan.rb"
+require_relative "graph/vrf.rb"  
+require_relative "graph/vs.rb"
+require_relative "graph/graph.rb"
 
 def poll_nexus_conf user, pass, ip, graph
     nodes_db_lines = Array.new
