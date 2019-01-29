@@ -1,5 +1,5 @@
 require "net/ssh"
-require_relative "graph/vlan.rb"
+require_relative "graph/network.rb"
 require_relative "graph/vrf.rb"  
 require_relative "graph/vs.rb"
 require_relative "graph/graph.rb"

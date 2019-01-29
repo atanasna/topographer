@@ -1,4 +1,4 @@
-require_relative "graph/vlan.rb"
+require_relative "graph/network.rb"
 require_relative "graph/vrf.rb"
 require_relative "graph/vs.rb"
 require_relative "graph/graph.rb"
@@ -43,6 +43,13 @@ class Topographer
             @graph.connect r2,vs9
             @graph.connect r2,vs10
             @graph.connect r2,vs11
+        end
+    end
+
+    def to_json file
+        js = JSON.pretty_generate( JSON.parse(@graph.to_json) ).split('\n')
+        File.open(file, "w+") do |f|
+            js.each { |element| f.puts(element) }
         end
     end
 end

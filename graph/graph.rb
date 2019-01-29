@@ -1,4 +1,4 @@
-require_relative "vlan.rb"
+require_relative "network.rb"
 require_relative "vrf.rb"  
 require_relative "vs.rb"
 require 'rgl/adjacency'
@@ -12,7 +12,77 @@ class Graph < RGL::AdjacencyGraph
         super
         @weights = Hash.new
     end
-      
+
+    # GETTERS
+        def interfaces
+            return self.vertices.find_all{|vertex| vertex.class.name=="Interface"}
+        end
+
+        def networks
+            return self.vertices.find_all{|vertex| vertex.class.name=="Network"}
+        end
+
+        def vrfs
+            return self.vertices.find_all{|vertex| vertex.class.name=="Vrf"}
+        end
+
+        def vses
+            return self.vertices.find_all{|vertex| vertex.class.name=="Vs"}
+        end
+
+        def find input
+            vertex = self.vertices.find{|vertex| vertex.name == input.to_s}
+            if vertex.nil?
+                vertex =  self.vertices.find{|vertex| vertex.vid == input.to_s} 
+            end
+            return vertex
+        end
+        
+        def get_vrfs_behind_vs vs
+            vrfs = Array.new
+            nodes = self.adjacent_vertices vs
+            nodes.each do |node|
+                if node.class.name == "Network"
+                      probable_vrfs = self.adjacent_vertices node
+                      probable_vrfs.each do |probable_vrf|
+                            if probable_vrf.class.name == "Vrf"
+                                  vrfs.push probable_vrf
+                            end
+                      end
+                end
+            end
+            return vrfs
+        end
+        
+        def get_networks_behind_vs vs
+            networks = Array.new
+            nodes = self.adjacent_vertices vs
+            vrfs = get_vrfs_behind_vs vs
+
+            nodes.each do |node|
+                if node.class.name == "Network"
+                      networks.push node
+                end
+            end
+
+            vrfs.each do |vrf|
+                networks += self.get_networks_behind_vrf vrf
+            end
+            
+            return networks.uniq
+        end
+
+        def get_networks_behind_vrf vrf
+              networks = Array.new
+              nodes = self.adjacent_vertices vrf
+              nodes.each do |node|
+                    if node.class.name == "Network"
+                          networks.push node
+                    end
+              end
+              return networks
+        end      
+
     # POPULATORS
         def add_vertex vertex
             vertex.graph = self
@@ -23,7 +93,7 @@ class Graph < RGL::AdjacencyGraph
             end
         end
 
-    #TRANSFORMERS
+    # EXPORTERS
         def to_json
             data = Hash.new
             data["vertices"] = self.vertices
@@ -54,8 +124,8 @@ class Graph < RGL::AdjacencyGraph
                 if vertex["class"]=="Vs"
                     graph.add_vertex Vs.new vertex["name"],vertex["vid"]
                 end
-                if vertex["class"]=="Vlan"
-                    graph.add_vertex Vlan.new vertex["id"],vertex["ip"],vertex["vid"],vertex["type"],vertex["desc"]
+                if vertex["class"]=="Network"
+                    graph.add_vertex Network.new vertex['address'], vertex['vlan'], vertex["vid"]
                 end
             end
             data["edges"].each do |edge|
@@ -91,7 +161,7 @@ class Graph < RGL::AdjacencyGraph
             #end
         end
 
-    # HELPERS
+    # OPERATORS
         def connect v1,v2,weight=1
             if not (v1.nil? and v2.nil?)
                 @weights.merge!([v1, v2] => weight)
@@ -110,71 +180,4 @@ class Graph < RGL::AdjacencyGraph
         def shortest_path source,target
               return self.dijkstra_shortest_path(@weights, source, target)
         end
-
-
-    # SEARCHES
-        def vlans
-            return self.vertices.find_all{|vertex| vertex.class.name=="Vlan"}
-        end
-
-        def vrfs
-            return self.vertices.find_all{|vertex| vertex.class.name=="Vrf"}
-        end
-
-        def vses
-            return self.vertices.find_all{|vertex| vertex.class.name=="Vs"}
-        end
-
-        def find input
-            vertex = self.vertices.find{|vertex| vertex.name == input.to_s}
-            if vertex.nil?
-                vertex =  self.vertices.find{|vertex| vertex.vid == input.to_s} 
-            end
-            return vertex
-        end
-        
-        def get_vrfs_behind_vs vs
-              vrfs = Array.new
-              nodes = self.adjacent_vertices vs
-              nodes.each do |node|
-                    if node.class.name == "Vlan"
-                          probable_vrfs = self.adjacent_vertices node
-                          probable_vrfs.each do |probable_vrf|
-                                if probable_vrf.class.name == "Vrf"
-                                      vrfs.push probable_vrf
-                                end
-                          end
-                    end
-              end
-              return vrfs
-        end
-        
-        def get_vlans_behind_vs vs
-            vlans = Array.new
-            nodes = self.adjacent_vertices vs
-            vrfs = get_vrfs_behind_vs vs
-
-            nodes.each do |node|
-                if node.class.name == "Vlan"
-                      vlans.push node
-                end
-            end
-
-            vrfs.each do |vrf|
-                vlans += self.get_vlans_behind_vrf vrf
-            end
-            
-            return vlans.uniq
-        end
-
-        def get_vlans_behind_vrf vrf
-              vlans = Array.new
-              nodes = self.adjacent_vertices vrf
-              nodes.each do |node|
-                    if node.class.name == "Vlan"
-                          vlans.push node
-                    end
-              end
-              return vlans
-        end      
 end

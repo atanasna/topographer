@@ -17,23 +17,20 @@ class Vertex
 
     #HELPERS
     def connected? vertex
-        if @graph.connected? self,vertex
-            return true
-        else
-            return false
-        end
+        return @graph.connected? self,vertex
     end
+
     def shortest_path vertex
         return @graph.shortest_path self,vertex
     end
 
     #JSON
-    def to_json(options = {})
-        {'class' => self.class.name, 'vid' => @vid, 'name' => @name}.to_json
-    end
+        def to_json(options = {})
+            return {'class' => self.class.name, 'vid' => @vid, 'name' => @name}.to_json
+        end
 
-    def self.from_json string
-        data = JSON.load string
-        self.new data['name'], data['vid']
-    end
+        def self.from_json string
+            data = JSON.load string
+            self.new data['name'], data['vid']
+        end
 end
