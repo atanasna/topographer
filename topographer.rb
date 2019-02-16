@@ -21,7 +21,7 @@ class Topographer
             vs3 = @graph.find "PROD_GHO_VS"
             vs4 = @graph.find "PROD_DCSERVICES_VS"
             vs5 = @graph.find "PROD_PERIMETER_VS"
-            r = @graph.find "PROD_CORE_VIRTUAL-ROU"
+            r = @graph.find "PROD_CORE_VR"
 
             vs6 = @graph.find "NONPROD_EBT_VS"
             vs7 = @graph.find "NONPROD_CORE_VS"
@@ -29,7 +29,7 @@ class Topographer
             vs9 = @graph.find "PP_DC_SERVICES_VS"
             vs10 = @graph.find "TS_DC_SERVICES_VS"
             vs11 = @graph.find "NONPROD_DCSERVICES_VS"
-            r2 = @graph.find "NONPROD_CORE_VIRTUAL-"
+            r2 = @graph.find "NONPROD_CORE_VR"
 
             @graph.connect r,vs1
             @graph.connect r,vs2

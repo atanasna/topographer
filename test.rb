@@ -1,20 +1,23 @@
-require_relative "poller/ConfigurationPoller.rb"
-require_relative "poller/ConfigurationParser.rb"
+require_relative "poller/ConfigPoller.rb"
+require_relative "poller/ConfigParser.rb"
 require_relative "topographer.rb"
 require "awesome_print"
 
-topo = Topographer.new "json_graph"
-topo2 = Topographer.new "json_graph2"
-
-
-ap topo.graph.vertices.size
-ap topo.graph.edges.size
-ap topo2.graph.vertices.size
-ap topo2.graph.edges.size
-ap "KURO"
-
+topo = Topographer.new
 
 #ap "---- Checkpoint GW ----"
-#ap "---- Checkpoint VSX ----"
-#vsx_conf = ConfigurationPoller.get_checkpoint_vsx_config "127.0.0.1","admin","W23ht@="
-#ap vsx_conf
+ap "---- Checkpoint ProdVSX ----"
+#vsx_conf = ConfigurationPoller.poll_checkpoint_vsx "127.0.0.1","svcT_locqualys","Qu@lys$(ann3r"
+vsx_conf = ConfigPoller.poll_checkpoint_vsx "admin", "W23ht@=", "127.0.0.1", 6022
+ConfigParser.parse_checkpoint_vsx vsx_conf, topo.graph
+
+ap "---- Checkpoint NonProdVSX ----"
+#vsx_conf = ConfigurationPoller.poll_checkpoint_vsx "127.0.0.1","svcT_locqualys","Qu@lys$(ann3r"
+vsx_conf = ConfigPoller.poll_checkpoint_vsx "admin", "W23ht@=", "127.0.0.1", 7022
+ConfigParser.parse_checkpoint_vsx vsx_conf, topo.graph
+
+ap "---- Cisco Nexus ----"
+nexus_conf = ConfigPoller.poll_cisco_nexus "svcT_locqualys", "Qu@lys$(ann3r", "127.0.0.1", 5022
+ConfigParser.parse_cisco_nexus nexus_conf, topo.graph
+
+topo.to_json "new_json_graph2"

@@ -115,17 +115,28 @@ def print_shortest_path graph, ip_a, ip_b
     puts
     if not network_a.nil? and not network_b.nil?
         path = graph.shortest_path network_a,network_b
-        path.each_index do |i|
-            if (path[i].class.name == "Network")
-                print "#{path[i].name}(#{path[i].vlan})"
+
+        print "A -> "
+        path.each do |node|
+            if (node.class.name == "Network")
+                print "#{node.name}(#{node.vlan})"
             else
-                print "#{path[i].name}"
+                print "#{node.name}(#{node.class.name})"
             end
-            if (path.size-1 > i)
-                print " -> "
-            end
+            print " -> "
         end
-        puts
+
+        puts "B"
+        #path.each_index do |i|
+        #    if (path[i].class.name == "Network")
+        #        print "#{path[i].name}(#{path[i].vlan})"
+        #    else
+        #        print "#{path[i].name}(#{path[i].class.name})"
+        #    end
+        #    if (path.size-1 > i)
+        #        print " -> "
+        #    end
+        #end
     else
         puts "Sorry cant find information about these networkS"
     end

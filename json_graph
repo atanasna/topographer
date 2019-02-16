@@ -2574,7 +2574,7 @@
     {
       "class": "Vs",
       "vid": "11ae369e9ef719fd8ed6108ee693e3a8",
-      "name": "PROD_CORE_VIRTUAL-ROU"
+      "name": "PROD_CORE_VR"
     },
     {
       "class": "Network",
@@ -2585,7 +2585,7 @@
     {
       "class": "Vs",
       "vid": "fee8e786b25bc399cba602e8f9b5a569",
-      "name": "PROD_PERIMETER_VIRTUA"
+      "name": "PROD_PERIMETER_VR"
     },
     {
       "class": "Network",
@@ -3093,7 +3093,7 @@
     {
       "class": "Vs",
       "vid": "43cd2ac212412eff8e74681e188a24b2",
-      "name": "NONPROD_CORE_VIRTUAL-"
+      "name": "NONPROD_CORE_VR"
     }
   ],
   "edges": [

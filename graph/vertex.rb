@@ -33,4 +33,9 @@ class Vertex
             data = JSON.load string
             self.new data['name'], data['vid']
         end
+
+    # OVERWRITES
+        def to_s
+            return "#{@name}(#{self.class.name})"
+        end
 end

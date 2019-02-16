@@ -1,4 +1,5 @@
 require_relative "network.rb"
+require_relative "interface.rb"
 require_relative "vrf.rb"  
 require_relative "vs.rb"
 require 'rgl/adjacency'
@@ -43,12 +44,12 @@ class Graph < RGL::AdjacencyGraph
             nodes = self.adjacent_vertices vs
             nodes.each do |node|
                 if node.class.name == "Network"
-                      probable_vrfs = self.adjacent_vertices node
-                      probable_vrfs.each do |probable_vrf|
-                            if probable_vrf.class.name == "Vrf"
-                                  vrfs.push probable_vrf
-                            end
-                      end
+                    probable_vrfs = self.adjacent_vertices node
+                    probable_vrfs.each do |probable_vrf|
+                        if probable_vrf.class.name == "Vrf"
+                            vrfs.push probable_vrf
+                        end
+                    end
                 end
             end
             return vrfs
@@ -86,7 +87,7 @@ class Graph < RGL::AdjacencyGraph
     # POPULATORS
         def add_vertex vertex
             vertex.graph = self
-            if find(vertex.vid).nil? and find(vertex.name).nil?
+            if find(vertex.vid).nil? #and find(vertex.name).nil?
                 super
             else
                 #error
@@ -127,6 +128,9 @@ class Graph < RGL::AdjacencyGraph
                 if vertex["class"]=="Network"
                     graph.add_vertex Network.new vertex['address'], vertex['vlan'], vertex["vid"]
                 end
+                if vertex["class"]=="Interface"
+                    graph.add_vertex Interface.new vertex['name'], vertex['address'], vertex["vid"]
+                end
             end
             data["edges"].each do |edge|
                 v1 = graph.find(edge["source"])
@@ -163,18 +167,20 @@ class Graph < RGL::AdjacencyGraph
 
     # OPERATORS
         def connect v1,v2,weight=1
-            if not (v1.nil? and v2.nil?)
-                @weights.merge!([v1, v2] => weight)
-                self.add_edge v1,v2
-            end    
+            if v1.nil? or v2.nil? then return end
+
+            @weights.merge!([v1, v2] => weight)
+            self.add_edge v1,v2
         end
 
         def connected? v1,v2
-              if self.adjacent_vertices(v1).include? v2 
-                    true
-              else
-                    false
-              end
+            if v1.nil? or v2.nil? then return false end
+
+            if self.adjacent_vertices(v1).include? v2 
+                true
+            else
+                false
+            end
         end
 
         def shortest_path source,target
