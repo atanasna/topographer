@@ -11,22 +11,67 @@ require_relative "../graph/graph.rb"
 
 class ConfigParser
     
+    def self.parse_checkpoint_gw config, graph
+
+        fw_name = config.find{|line| line.match(/set hostname .+/)}.split(" ").last
+        firewall = graph.find fw_name 
+        if firewall.nil?
+            firewall = Vs.new(fw_name)
+            graph.add_vertex firewall
+        end
+
+        interfaces_config = config.find_all{|line| line.match(/bond.+ipv4-address/)}
+
+        interfaces_config.each do |int_config|
+
+            # Parsing
+            interface_name = nil
+            interface_address = nil
+            network_address = nil
+            vlan_id = nil
+
+            captures = int_config.match(/(bond\d\.\d+)\sipv4-address\s(\d+\.\d+\.\d+\.\d+) mask-length (\d+)/i).captures
+
+            interface_name = captures[0]
+            interface_address = "#{captures[1]}/#{captures[2]}"
+            if interface_name.match(/bond\d+\.(\d+)/)
+                vlan_id = interface_name.match(/bond\d+\.(\d+)/i).captures.first
+            end
+
+            ap "#{fw_name} : #{interface_name} : #{interface_address} : "#{IPAddress(interface_name).network}"
+            
+            # Graph creation
+            interface = Interface.new interface_name, interface_address
+
+            network_address = IPAddress(interface_address).network
+            network = graph.find "#{network_address.address.to_s}/#{network_address.prefix.to_s}"
+            if network.nil?  
+                network = Network.new interface_address, vlan_id
+                graph.add_vertex network
+            end
+
+            graph.add_vertex interface
+            graph.connect firewall, interface
+            graph.connect interface, network
+        end
+    end
+
     def self.parse_checkpoint_vsx config, graph
 
         vs_configs = config.slice_before{|line| line.match(/######## /)}.to_a    
         warp_interfaces = Array.new
 
         vs_configs.each do |vs_config|
-
             # Parse VS
-            vs_name = vs_config.first.sub!("######## ","")
+            vs_name = vs_config.first.sub("######## ","").sub("\n","")
             if vs_name == "0" then next end
             vs = Vs.new(vs_name)
             graph.add_vertex vs
 
             # Parsing Interfaces
-            interface_configs = vs_config.select{|line| line.match(/ipv4/)}
+            interface_configs = vs_config.select{|line| line.match(/ipv4.+\d+\.\d+\.\d+\.\d+/)}
             interface_configs.each do |int_config|
+
                 # Checks
                 #if int_config.match(/Not Configured/) then next end
 
@@ -139,9 +184,8 @@ class ConfigParser
 
     def self.parse_cisco_nexus config, graph
         vdc_configs = config.slice_before{|line| line.match(/switchto vdc /)}.to_a   
-        
         vdc_configs.each do |config|
-            ConfigurationParser.parse_cisco_generic config, graph
+            ConfigParser.parse_cisco_generic config, graph
         end
     end
 end
